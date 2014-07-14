@@ -82,8 +82,8 @@ F77LIB =
 # LIB = -lm
 
 # For "make install"
-INSTALL_LIB = /usr/local/lib
-INSTALL_INCLUDE = /usr/local/include
+INSTALL_LIB = /scratch/klueska/install/lib
+INSTALL_INCLUDE = /scratch/klueska/install/include
 
 # Which version of MAKE you are using (default is "make")
 # MAKE = make
@@ -106,8 +106,10 @@ INSTALL_INCLUDE = /usr/local/include
 # naming the BLAS and LAPACK library (*.a or *.so) files.
 
 # This is probably slow ... it might connect to the Standard Reference BLAS:
-BLAS = -lblas -lgfortran
-LAPACK = -llapack
+# BLAS = -lblas -lgfortran
+# LAPACK = -llapack
+BLAS = -lmkl_blas95_lp64 -Wl,--start-group -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -Wl,--end-group -lgomp
+LAPACK = -lmkl_lapack95_lp64
 
 # NOTE: this next option for the "Goto BLAS" has nothing to do with a "goto"
 # statement.  Rather, the Goto BLAS is written by Dr. Kazushige Goto.
@@ -226,7 +228,7 @@ UMFPACK_CONFIG =
 CHOLMOD_CONFIG = $(GPU_CONFIG)
 
 # uncomment this line to compile CHOLMOD without METIS:
-# CHOLMOD_CONFIG = -DNPARTITION
+CHOLMOD_CONFIG = -DNPARTITION
 
 #------------------------------------------------------------------------------
 # SuiteSparseQR configuration:
@@ -241,23 +243,23 @@ CHOLMOD_CONFIG = $(GPU_CONFIG)
 # default, without timing, without TBB:
 SPQR_CONFIG =
 # with TBB:
-# SPQR_CONFIG = -DHAVE_TBB
+SPQR_CONFIG = -DHAVE_TBB
 
 # This is needed for IBM AIX: (but not for and C codes, just C++)
 # SPQR_CONFIG = -DBLAS_NO_UNDERSCORE
 
 # with TBB, you must select this:
-# TBB = -ltbb
+TBB = -ltbb -lithe -lparlib
 # without TBB:
-TBB =
+# TBB =
 
 #------------------------------------------------------------------------------
 # Linux
 #------------------------------------------------------------------------------
 
 # Using default compilers:
-# CC = gcc
-# CF = $(CFLAGS) -O3 -fexceptions
+CC = gcc
+CF = $(CFLAGS) -O3 -fexceptions
 
 # alternatives:
 # CF = $(CFLAGS) -g -fexceptions \
