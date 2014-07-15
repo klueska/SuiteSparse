@@ -7,6 +7,9 @@
 
 #include "SuiteSparseQR.hpp"
 #include <complex>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
 // SuiteSparseQR uses an integer defined in SuiteSparse_config.h called
 // SuiteSparse_long.  It is a 32-bit integer on a 32-bit platform, and a 64-bit
@@ -66,10 +69,24 @@ int main (int argc, char **argv)
     cholmod_dense *X, *B ;
     int mtype ;
     Long m, n ;
+    char* grain ;
 
     // start CHOLMOD
     cc = &Common ;
     cholmod_l_start (cc) ;
+
+    // set the grain size
+    grain = getenv("SPQR_GRAIN");
+    if (grain == NULL)
+        cc->SPQR_grain = 1;
+    else if (strcmp(grain, "MAX") == 0)
+        cc->SPQR_grain = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+    else
+        cc->SPQR_grain = atof(grain);
+    if (cc->SPQR_grain < 1) {
+        printf ("SPQR grain size must be >= 1\n");
+        exit (1);
+    }
 
     // A = mread (stdin) ; read in the sparse matrix A
     A = (cholmod_sparse *) cholmod_l_read_matrix (stdin, 1, &mtype, cc) ;
