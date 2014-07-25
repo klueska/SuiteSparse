@@ -54,7 +54,6 @@ SPQR/Demo/analysis.txt
 SPQR/Demo/qrdemo
 SPQR/Demo/qrsimple
 SPQR/Demo/qrsimplec
-SPQR/Matrix/deltaX.mtx
 UMFPACK/Demo/numeric.umf
 UMFPACK/Demo/symbolic.umf
 UMFPACK/Demo/umfpack_di_demo
