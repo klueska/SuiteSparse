@@ -76,14 +76,18 @@ F77 = gfortran
 F77FLAGS = $(FFLAGS) -O
 F77LIB =
 
+# Link in google pprof profiler library if desired
+# PROFILER = -Wl,--no-as-needed -lprofiler -Wl,--as-needed
+
 # C and Fortran libraries.  Remove -lrt if you don't have it.
-  LIB = -lm -lrt
+  LIB = -lm -lrt $(PROFILER)
 # Using the following requires CF = ... -DNTIMER on POSIX C systems.
-# LIB = -lm
+# LIB = -lm $(PROFILER)
 
 # For "make install"
-INSTALL_LIB = /scratch/klueska/install/lib
-INSTALL_INCLUDE = /scratch/klueska/install/include
+PREFIX ?= /usr
+INSTALL_LIB = $(PREFIX)/lib
+INSTALL_INCLUDE = $(PREFIX)/include
 
 # Which version of MAKE you are using (default is "make")
 # MAKE = make
@@ -110,6 +114,8 @@ INSTALL_INCLUDE = /scratch/klueska/install/include
 # LAPACK = -llapack
 BLAS = -lmkl_blas95_lp64 -Wl,--start-group -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -Wl,--end-group -lgomp
 LAPACK = -lmkl_lapack95_lp64
+MKL_LIB ?= /usr/lib
+CFLAGS += -L$(MKL_LIB)
 
 # NOTE: this next option for the "Goto BLAS" has nothing to do with a "goto"
 # statement.  Rather, the Goto BLAS is written by Dr. Kazushige Goto.
@@ -249,7 +255,7 @@ SPQR_CONFIG = -DHAVE_TBB
 # SPQR_CONFIG = -DBLAS_NO_UNDERSCORE
 
 # with TBB, you must select this:
-TBB = -ltbb -lithe -lparlib
+TBB = -ltbb
 # without TBB:
 # TBB =
 
