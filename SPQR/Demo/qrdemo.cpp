@@ -69,23 +69,50 @@ int main (int argc, char **argv)
     cholmod_dense *X, *B ;
     int mtype ;
     Long m, n ;
-    char* grain ;
+    char* grain, *nthreads ;
 
     // start CHOLMOD
     cc = &Common ;
     cholmod_l_start (cc) ;
 
-    // set the grain size
-    grain = getenv("SPQR_GRAIN");
-    if (grain == NULL)
-        cc->SPQR_grain = 1;
-    else if (strcmp(grain, "MAX") == 0)
-        cc->SPQR_grain = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+    // Set the number of TBB threads, if not set, it gets set to -1, which will
+    // trigger us to look for SPQR_GRAIN to decide what to do for parallelism.
+    nthreads = getenv("TBB_NUM_THREADS");
+    if (nthreads == NULL)
+        cc->SPQR_nthreads = -1;
+    else if (strcmp(nthreads, "BEST") == 0)
+        cc->SPQR_nthreads = 0;
     else
-        cc->SPQR_grain = atof(grain);
-    if (cc->SPQR_grain < 1) {
-        printf ("SPQR grain size must be >= 1\n");
-        exit (1);
+        cc->SPQR_nthreads = atof(nthreads);
+
+    // If SPQR_nthreads is explicitly set to 0 or set to BEST, then
+    // automatically set the grain size to 2* the number of processors in the
+    // system (as recommended in the SPQR documentation).
+    if (cc->SPQR_nthreads == 0) {
+        cc->SPQR_grain = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+    // Otherwise, if it is explicitly set to > 0, then automatically set the
+    // grain size to 2* the number of threads specified (as recommended in the
+    // SPQR documentation).
+    } else if (cc->SPQR_nthreads > 0) {
+        cc->SPQR_grain = cc->SPQR_nthreads * 2;
+    // Otherwise, use SQPR_GRAIN to set the grain size to use for TBB
+    // parallelism. The number of threads is determined automatically by TBB.
+    // If SPQR_GRAIN is not set, default it 1.  If set to MAX, set it to twice
+    // the number of processors on the system (as recommended in the SPQR
+    // documentation).
+    } else {
+        grain = getenv("SPQR_GRAIN");
+        if (grain == NULL)
+            cc->SPQR_grain = 1;
+        else if (strcmp(grain, "MAX") == 0)
+            cc->SPQR_grain = sysconf(_SC_NPROCESSORS_ONLN) * 2;
+        else
+            cc->SPQR_grain = atof(grain);
+
+        if (cc->SPQR_grain < 1) {
+            printf ("SPQR grain size must be >= 1\n");
+            exit (1);
+        }
     }
 
     // A = mread (stdin) ; read in the sparse matrix A
