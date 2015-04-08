@@ -1,0 +1,46 @@
+#! /usr/bin/env bash
+
+: ${OMP_NUM_THREADS:="$(seq 16)"}
+: ${TBB_NUM_THREADS:="$(seq 16)"}
+: ${EXEC:="qrdemo"}
+: ${MATRICES:="$(find matrices/ -name *.mtx)"}
+
+MKL_LIB=/opt/intel/mkl/lib/intel64
+LIBGOMP_BASE=$HOME/projects/libgomp
+TBB_BASE=$HOME/projects/tbb
+LIBGOMP_LIBDIR=libgomp/build/.libs
+TBB_LIBDIR=build/linux_intel64_gcc_cc4.8_libc2.19_kernel3.13.0_release
+
+set-env()
+{
+  local LIBGOMP_LIB=$LIBGOMP_BASE/libgomp-${1}/$LIBGOMP_LIBDIR
+  local TBB_LIB=$TBB_BASE/tbb-${1}/$TBB_LIBDIR
+  export LD_LIBRARY_PATH="$MKL_LIB:$LIBGOMP_LIB:$TBB_LIB"
+}
+
+env=${1}
+echo "#################################################################"
+echo "#################################################################"
+echo "#################################################################"
+echo $env 
+set-env ${env}
+ldd ./qrdemo 2>&1
+for omp_threads in ${OMP_NUM_THREADS}; do
+  for tbb_threads in ${TBB_NUM_THREADS}; do
+    for matrix in ${MATRICES}; do
+      export OMP_NUM_THREADS=${omp_threads}
+      export TBB_NUM_THREADS=${tbb_threads}
+      echo "Configuration: env=${env} OMP=${omp_threads} TBB=${tbb_threads} MATRIX=${matrix}" >&2
+      echo "#################################################################"
+      echo "${matrix}"
+      echo "OMP_NUM_THREADS:${omp_threads}"
+      echo "TBB_NUM_THREADS:${tbb_threads}"
+      echo "#################################################################"
+      (time ./${EXEC} < ${matrix}) 2>&1
+      echo "#################################################################"
+    done
+  done
+done
+echo "#################################################################"
+echo "#################################################################"
+

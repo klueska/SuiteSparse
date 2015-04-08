@@ -1,0 +1,64 @@
+#! /usr/bin/env bash
+
+#: ${ITERATIONS:="$(seq 1)"}
+: ${ITERATIONS:="$(seq 4 4)"}
+
+#sleep 30
+mkdir -p data
+
+export VCORE_LIMIT="16"
+export LITHE_SPIN_COUNT="-1"
+export UPTHREAD_SPIN_COUNT="-1"
+
+for i in ${ITERATIONS}; do 
+  echo "Iteration: $i"
+  #export OMP_NUM_THREADS="$(seq 16)"
+  #export TBB_NUM_THREADS="$(seq 16)"
+  export OMP_NUM_THREADS="16"
+  export TBB_NUM_THREADS="16"
+  export MATRICES="$(find matrices/ -name *.mtx)"
+  envs="native"
+  for env in $envs; do
+    taskset -c 0-15 ./run-experiment ${env} > data/${env}-results-${i}
+  done
+
+  export OMP_NUM_THREADS="8"
+  export TBB_NUM_THREADS="15"
+  export MATRICES="matrices/Rucci1/Rucci1.mtx"
+  envs="native"
+  for env in $envs; do
+    taskset -c 0-15 ./run-experiment ${env} >> data/${env}-results-${i}
+  done
+
+  export OMP_NUM_THREADS="7"
+  export TBB_NUM_THREADS="11"
+  export MATRICES="matrices/deltaX/deltaX.mtx"
+  envs="native"
+  for env in $envs; do
+    taskset -c 0-15 ./run-experiment ${env} >> data/${env}-results-${i}
+  done
+
+  export OMP_NUM_THREADS="14"
+  export TBB_NUM_THREADS="2"
+  export MATRICES="matrices/landmark/landmark.mtx"
+  envs="native"
+  for env in $envs; do
+    taskset -c 0-15 ./run-experiment ${env} >> data/${env}-results-${i}
+  done
+
+  export OMP_NUM_THREADS="7"
+  export TBB_NUM_THREADS="13"
+  export MATRICES="matrices/ESOC/ESOC.mtx"
+  envs="native"
+  for env in $envs; do
+    taskset -c 0-15 ./run-experiment ${env} >> data/${env}-results-${i}
+  done
+  
+  export OMP_NUM_THREADS="16"
+  export TBB_NUM_THREADS="16"
+  export MATRICES="$(find matrices/ -name *.mtx)"
+  envs="upthread lithe"
+  for env in $envs; do
+    ./run-experiment ${env} > data/${env}-results-${i}
+  done
+done
